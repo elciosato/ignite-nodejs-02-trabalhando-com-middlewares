@@ -11,18 +11,55 @@ const users = [];
 
 function checksExistsUserAccount(request, response, next) {
   // Complete aqui
+  const { username } = request.headers;
+  const user = users.find(usr => usr.username === username);
+  if (user) {
+    request.user = user;
+    next();
+  } else {
+    return response.status(404).json({ error: "Username not found!" })
+  }
 }
 
 function checksCreateTodosUserAvailability(request, response, next) {
   // Complete aqui
+  const { user } = request;
+  if (!user.pro && user.todos.length >= 10) {
+    return response.status(403).json({ error: "Limit of 10 todos have been reached. Please consider to upgrade to Pro Plan" });
+  }
+  next();
 }
 
 function checksTodoExists(request, response, next) {
   // Complete aqui
+  const { username } = request.headers;
+  const { id: todoId } = request.params;
+  if (!validate(todoId)) {
+    return response.status(400).json({ error: "Invalid Todo ID format!" })
+  }
+  const user = users.find(usr => usr.username === username);
+  if (user) {
+    const todo = user.todos.find(t => t.id === todoId);
+    if (todo) {
+
+      request.user = user;
+      request.todo = todo;
+      next();
+    }
+  }
+  return response.status(404).json({ error: "Username or Todo ID not found!" })
 }
 
 function findUserById(request, response, next) {
   // Complete aqui
+  const { id: userId } = request.params;
+  const user = users.find(usr => usr.id === userId)
+  if (user) {
+    request.user = user;
+    next();
+  } else {
+    return response.status(404).json({ error: "User ID not found!" })
+  }
 }
 
 app.post('/users', (request, response) => {
